@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mon Épargne Pro</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #f8fafc;
+      --accent: #3b82f6;
+      --card: #1e293b;
+      --highlight: #22c55e;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: var(--accent);
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.8rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 2rem;
+    }
+    .card {
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      border-radius: 0.5rem;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 1rem;
+      background: var(--highlight);
+      color: white;
+      cursor: pointer;
+    }
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .actions button {
+      flex: 1;
+      background: #334155;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+    }
+    th, td {
+      padding: 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid #475569;
+    }
+    canvas {
+      width: 100%;
+      max-height: 300px;
+      margin-top: 2rem;
+    }
+    .interet {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+    #lockScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #000000f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 9999;
+    }
+    #lockScreen input {
+      width: 120px;
+      font-size: 1.5rem;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    #simulationResult {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+<div id="lockScreen">
+  <h2>🔐 Entrez votre code PIN</h2>
+  <input type="password" maxlength="4" id="pinInput" placeholder="••••" autofocus />
+  <p id="pinError" style="color:red;display:none;">Code incorrect</p>
+</div>
+
+<header>📈 Mon Épargne Pro – 2025</header>
+<div class="container" style="display:none;" id="app">
+  <div class="card">
+    <label>Mois :</label>
+    <select id="mois"></select>
+
+    <label>Revenu (€)</label>
+    <input id="revenu" type="number" />
+
+    <label>Dépenses (€)</label>
+    <input id="depenses" type="number" />
+
+    <label>Épargne (€)</label>
+    <input id="epargne" type="number" />
+
+    <label>Investi (€)</label>
+    <input id="investi" type="number" />
+
+    <button onclick="ajouter()">Ajouter</button>
+    <div class="actions">
+      <button onclick="resetMois()">♻️ Réinitialiser mois</button>
+      <button onclick="resetCapital()">💥 Capital à 1500 €</button>
+      <button onclick="openApp('traderepublic')">Trade Republic 📱</button>
+      <button onclick="openApp('revolut')">Revolut 💳</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <table id="historique">
+      <thead>
+        <tr>
+          <th>Mois</th><th>Revenu</th><th>Dépenses</th><th>Épargne</th>
+          <th>Investi</th><th>Intérêts</th><th>Capital</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>📊 Simulation de capital futur</h3>
+    <label>Montant épargné chaque mois (€)</label>
+    <input id="simulEpargne" type="number" value="200" />
+    <label>Sur combien de mois ?</label>
+    <input id="simulMois" type="number" value="12" />
+    <button onclick="simuler()">Simuler</button>
+    <div id="simulationResult"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const pinSecret = "1234";
+const lockScreen = document.getElementById("lockScreen");
+const app = document.getElementById("app");
+const inputPIN = document.getElementById("pinInput");
+const pinError = document.getElementById("pinError");
+inputPIN.addEventListener("keyup", (e) => {
+  if (e.key === "Enter") {
+    if (inputPIN.value === pinSecret) {
+      lockScreen.style.display = "none";
+      app.style.display = "block";
+    } else {
+      pinError.style.display = "block";
+    }
+  }
+});
+
+const moisFixes = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+const moisSelect = document.getElementById("mois");
+let capital = parseFloat(localStorage.getItem("capital")) || 1500;
+let historique = JSON.parse(localStorage.getItem("historique")) || [];
+
+moisFixes.forEach((m, i) => {
+  const opt = document.createElement("option");
+  opt.value = m;
+  opt.text = m;
+  if (new Date().getMonth() === i) opt.selected = true;
+  moisSelect.appendChild(opt);
+});
+
+function ajouter() {
+  console.log('✅ Fonction ajouter exécutée');
+  const mois = moisSelect.value;
+  const revenu = parseFloat(document.getElementById("revenu").value) || 0;
+  const depenses = parseFloat(document.getElementById("depenses").value) || 0;
+  const epargne = parseFloat(document.getElementById("epargne").value) || 0;
+  const investi = parseFloat(document.getElementById("investi").value) || 0;
+  const interets = capital * 0.02;
+  capital += epargne + interets;
+  const data = { mois, revenu, depenses, epargne, investi, interets, capital: parseFloat(capital.toFixed(2)) };
+  const i = historique.findIndex(m => m.mois === mois);
+  if (i !== -1) historique[i] = data; else historique.push(data);
+  localStorage.setItem("capital", capital.toFixed(2));
+  localStorage.setItem("historique", JSON.stringify(historique));
+  afficher(); resetInputs();
+}
+
+function afficher() {
+  const tbody = document.querySelector("#historique tbody");
+  tbody.innerHTML = "";
+  const tri = moisFixes.map(m => historique.find(h => h.mois === m)).filter(Boolean);
+  tri.forEach(d => {
+    tbody.innerHTML += `<tr>
+      <td>${d.mois}</td><td>${d.revenu} €</td><td>${d.depenses} €</td>
+      <td>${d.epargne} €</td><td>${d.investi} €</td>
+      <td class='interet'>+${d.interets.toFixed(2)} €</td>
+      <td><b>${d.capital.toFixed(2)} €</b></td>
+    </tr>`;
+  });
+  renderChart(tri);
+}
+
+function renderChart(data) {
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (window.myChart) window.myChart.destroy();
+  window.myChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.mois),
+      datasets: [{
+        label: 'Capital (€)',
+        data: data.map(d => d.capital),
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.2
+      }]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: false } } }
+  });
+}
+
+function simuler() {
+  const epargne = parseFloat(document.getElementById("simulEpargne").value) || 0;
+  const mois = parseInt(document.getElementById("simulMois").value) || 1;
+  let total = capital;
+  for (let i = 0; i < mois; i++) total = (total + epargne) * 1.02;
+  document.getElementById("simulationResult").innerText = `📈 Capital estimé dans ${mois} mois : ${total.toFixed(2)} €`;
+}
+
+function resetCapital() {
+  capital = 1500;
+  localStorage.setItem("capital", capital.toFixed(2));
+  alert("Capital remis à 1500 €");
+  afficher();
+}
+
+function resetMois() {
+  const mois = moisSelect.value;
+  historique = historique.filter(m => m.mois !== mois);
+  localStorage.setItem("historique", JSON.stringify(historique));
+  afficher();
+}
+
+function resetInputs() {
+  ["revenu", "depenses", "epargne", "investi"].forEach(id => document.getElementById(id).value = "");
+}
+
+function openApp(app) {
+  const urls = { traderepublic: "traderepublic://", revolut: "revolut://" };
+  const fallback = { traderepublic: "https://traderepublic.com", revolut: "https://revolut.com" };
+  window.location = urls[app];
+  setTimeout(() => window.open(fallback[app], "_blank"), 500);
+}
+
+afficher();
+</script>
+</body>
+</html>
