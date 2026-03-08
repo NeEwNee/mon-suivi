@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mon Finance Tracker</title>
+
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+
+<meta name="theme-color" content="#0f172a">
+
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+<h1>💰 Finance Tracker</h1>
+</header>
+
+<section class="card">
+<h2>Solde total</h2>
+<p id="balance">0 €</p>
+</section>
+
+<section class="card">
+<h2>Ajouter transaction</h2>
+
+<input id="desc" placeholder="Description">
+<input id="amount" placeholder="Montant">
+
+<button onclick="addTransaction()">Ajouter</button>
+
+</section>
+
+<section class="card">
+
+<h2>Transactions</h2>
+
+<ul id="transactions"></ul>
+
+</section>
+
+</div>
+
+<script src="app.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
