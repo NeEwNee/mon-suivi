@@ -1,58 +1,104 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Mon Finance Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Finance Tracker</title>
 
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 
-<meta name="theme-color" content="#0f172a">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
 <body>
 
-<div class="app">
-
 <header>
 <h1>💰 Finance Tracker</h1>
 </header>
 
-<section class="card">
+<div class="container">
+
+<div class="card balance">
+
 <h2>Solde total</h2>
 <p id="balance">0 €</p>
-</section>
 
-<section class="card">
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h3>Revenus</h3>
+<p id="income">0 €</p>
+</div>
+
+<div class="card">
+<h3>Dépenses</h3>
+<p id="expense">0 €</p>
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Objectif épargne</h2>
+
+<input id="goalInput" placeholder="Objectif €">
+<button onclick="setGoal()">Définir objectif</button>
+
+<p id="goalDisplay"></p>
+
+</div>
+
+<div class="card">
+
 <h2>Ajouter transaction</h2>
 
 <input id="desc" placeholder="Description">
+
 <input id="amount" placeholder="Montant">
+
+<select id="type">
+<option value="income">Revenu</option>
+<option value="expense">Dépense</option>
+</select>
+
+<select id="category">
+<option>Logement</option>
+<option>Nourriture</option>
+<option>Transport</option>
+<option>Shopping</option>
+<option>Loisirs</option>
+<option>Autre</option>
+</select>
 
 <button onclick="addTransaction()">Ajouter</button>
 
-</section>
+</div>
 
-<section class="card">
+<div class="card">
+
+<h2>Analyse</h2>
+
+<canvas id="chart"></canvas>
+
+</div>
+
+<div class="card">
 
 <h2>Transactions</h2>
 
 <ul id="transactions"></ul>
 
-</section>
+</div>
 
 </div>
 
 <script src="app.js"></script>
-
-<script>
-if ('serviceWorker' in navigator) {
-navigator.serviceWorker.register('service-worker.js');
-}
-</script>
 
 </body>
 </html>
